@@ -1,5 +1,5 @@
 
-import miniphare.inputs.phare_utilities as phare_utilities
+import pharein.phare_utilities as phare_utilities
 
 
 # ------------------------------------------------------------------------------
