@@ -1,2 +1,4 @@
 *.pynb_checkpoints
 *.png
+*.idea*
+*pycache*
