@@ -14,9 +14,7 @@ ph.Simulation(
 )
 
 
-m = ph.UniformModel()
-m.add_species("proton1")
-m.add_species("proton2", density=2.)
+ph.UniformModel(proton1={}, proton2={"density":2, "vbulk":(1.,0.,0.)})
 
 
 ph.FluidDiagnostics(

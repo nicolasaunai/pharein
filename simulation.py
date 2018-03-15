@@ -4,9 +4,9 @@ import numpy as np
 import configparser
 import os
 
-import pharein.phare_utilities as phare_utilities
-from pharein.globals import objects
-
+from . import phare_utilities
+#from .globals import objects
+from . import globals
 
 def compute_dimension(cells):
     return len(cells)
@@ -295,10 +295,10 @@ class Simulation(object):
     @checker
     def __init__(self, **kwargs):
 
-        if "Simulation" in objects:
-            raise RuntimeError("a simulation is already created")
+        if globals.sim is not None:
+            raise RuntimeError("simulation is already created")
         else:
-            objects["Simulation"] = self
+            globals.sim = self
 
         self.cells = kwargs['cells']
         self.dims = compute_dimension(self.cells)

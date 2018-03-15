@@ -1,26 +1,28 @@
 
-from pharein.globals import objects
-
+#from .globals import objects
+#from .globals import sim
+from . import globals
 
 class UniformModel(object):
 
-    def __init__(self, b=(1., 0., 0.), e=(0., 0., 0.)):
+    def __init__(self, b=(1., 0., 0.), e=(0., 0., 0.), **kwargs):
+
         self.model = {"model": "model", "model_name": "uniform"}
-        if "Simulation" not in objects:
+
+        if globals.sim is None:
             raise RuntimeError("A simulation must be declared before a model")
 
-        if "Model" in objects:
+        if globals.sim.model is not None:
             raise RuntimeError("A model is already created")
 
         else:
-            objects["Model"] = self
-            simulation = objects["Simulation"]
-            simulation.set_model(self)
+            globals.sim.set_model(self)
 
-        if len(b) != 3 or not isinstance(b, tuple) or not isinstance(b, list):
-            ValueError("invalid B")
-        if len(e) != 3 or not isinstance(e, tuple) or not isinstance(e, list):
-            ValueError("invalid E")
+        if len(b) != 3 or (not isinstance(b, tuple) and not isinstance(b, list)):
+            raise ValueError("invalid B")
+        if len(e) != 3 or (not isinstance(e, tuple) and not isinstance(e, list)):
+            raise ValueError("invalid E")
+
 
         self.model.update({"bx": b[0],
                            "by": b[1],
@@ -29,6 +31,10 @@ class UniformModel(object):
                            "ey": e[1],
                            "ez": e[2]})
 
+
+        self.species = kwargs.keys()
+        for species in self.species:
+            self.add_species(species, **kwargs[species])
 
 
 # ------------------------------------------------------------------------------

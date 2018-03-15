@@ -1,6 +1,7 @@
 
 from . import phare_utilities
-from pharein.globals import objects
+#from .globals import objects
+from . import globals
 
 # ------------------------------------------------------------------------------
 
@@ -89,16 +90,10 @@ class Diagnostics:
         self.path = kwargs['path']
         self.__extent = None
 
-        if "Simulation" not in objects:
+        if globals.sim is None:
             raise RuntimeError("A simulation must be created before adding diagnostics")
 
-        diag_register_name = "Diagnostics_" + self.name
-        if diag_register_name in objects:
-            raise RuntimeError("Diagnostics already created")
-
-        objects[diag_register_name] = self
-        simulation = objects["Simulation"]
-        simulation.add_diagnostics(self)
+        globals.sim.add_diagnostics(self)
 
     def iteration_interval(self):
         return self.start_iteration, self.last_iteration

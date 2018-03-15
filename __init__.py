@@ -1,13 +1,10 @@
 
-
-from pharein.uniform_model import UniformModel
-from pharein.diagnostics import FluidDiagnostics, ElectromagDiagnostics
-from pharein.simulation import Simulation
-
-from pharein.globals import objects
+from .uniform_model import UniformModel
+from .diagnostics import FluidDiagnostics, ElectromagDiagnostics
+from .simulation import Simulation
+from . import globals
 
 import os
-
 
 
 def prepare_job():
@@ -20,11 +17,10 @@ def prepare_job():
               if it does not exist yet
     """
 
-    if "Simulation" not in objects:
+    if globals.sim is None:
         raise RuntimeError("No Simulation created")
 
-
-    sim = objects["Simulation"]
+    sim = globals.sim
 
     print("preparing job...")
     if not os.path.exists(sim.path):
