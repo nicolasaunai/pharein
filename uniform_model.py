@@ -1,16 +1,22 @@
 
+from pharein.globals import objects
+
+
 class UniformModel(object):
 
-    def __init__(self):
+    def __init__(self, b=(1., 0., 0.), e=(0., 0., 0.)):
         self.model = {"model": "model", "model_name": "uniform"}
+        if "Simulation" not in objects:
+            raise RuntimeError("A simulation must be declared before a model")
 
+        if "Model" in objects:
+            raise RuntimeError("A model is already created")
 
-# ------------------------------------------------------------------------------
-    def add_fields(self,b=(1., 0., 0.),e=(0., 0., 0.)):
-        """
-        defines electromagnetic fields of a uniform model_name
-        default is B=1.e_x and E=0.
-        """
+        else:
+            objects["Model"] = self
+            simulation = objects["Simulation"]
+            simulation.set_model(self)
+
         if len(b) != 3 or not isinstance(b, tuple) or not isinstance(b, list):
             ValueError("invalid B")
         if len(e) != 3 or not isinstance(e, tuple) or not isinstance(e, list):
@@ -23,7 +29,9 @@ class UniformModel(object):
                            "ey": e[1],
                            "ez": e[2]})
 
-# b------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
 
     def nbr_species(self):
         """

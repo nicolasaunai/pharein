@@ -5,6 +5,7 @@ import configparser
 import os
 
 import pharein.phare_utilities as phare_utilities
+from pharein.globals import objects
 
 
 def compute_dimension(cells):
@@ -199,6 +200,32 @@ def add_dict_to_config(the_dict,conf, section_key="section"):
 # ------------------------------------------------------------------------------
 
 
+def check_refine(**kwargs):# levels, extent_ratio, refinement_iterations):
+
+    if "refinement" in kwargs:
+        refinement = kwargs["refinement"]
+    else:
+        return None
+
+    levels = refinement['levels']
+    refinement_iterations = refinement["refinement_iterations"]
+    extent_ratio = refinement["extent_ratio"]
+
+    if len(levels) != len(refinement_iterations):
+        raise ValueError("Error: levels and refinement_iterations must have the same length")
+    if extent_ratio[0] >= extent_ratio[1]:
+        raise ValueError("Error: extent_ratio[0] must be < extent_ratio[1]")
+    if extent_ratio[0] < 0:
+        raise ValueError("Error: extent_ratio[0] must be > 0")
+    if extent_ratio[1] > 1:
+        raise ValueError("Error: extent_ratio[1] must be < 1")
+
+    return refinement
+
+
+# ------------------------------------------------------------------------------
+
+
 def checker(func):
     def wrapper(simulation_object, **kwargs):
         accepted_keywords = ['domain_size', 'cells', 'dl', 'particle_pusher', 'final_time',
@@ -219,6 +246,7 @@ def checker(func):
             dims = compute_dimension(cells)
             boundary_types = check_boundaries(dims, **kwargs)
             origin = check_origin(dims, **kwargs)
+            refinement = check_refine(**kwargs)
 
             refined_particle_nbr = kwargs.get('refined_particle_nbr', 2)  # TODO change that default value
             diag_export_format = kwargs.get('diag_export_format', 'ascii') #TODO add checker with valid formats
@@ -227,7 +255,7 @@ def checker(func):
                         time_step=time_step, time_step_nbr=time_step_nbr,
                         particle_pusher=pusher, layout=layout, origin=origin,
                         boundary_types=boundary_types, path=path, refined_particle_nbr=refined_particle_nbr,
-                        diag_export_format=diag_export_format)
+                        diag_export_format=diag_export_format, refinement=refinement)
 
         except ValueError as msg:
             print(msg)
@@ -239,33 +267,38 @@ def checker(func):
 
 
 class Simulation(object):
-    """represents a simulation input"""
+    """
+    1D run example: Simulation(time_step_nbr = 100, boundary_types="periodic", cells=80)
+    2D run example: Simulation(time_step_nbr = 100, boundary_types=("periodic","periodic"), cells=(80,20))
+    3D run example: Simulation(time_step_nbr = 100, boundary_types=("periodic","periodic","periodic"), cells=(80,20,40))
+
+    optional parameters:
+    -------------------
+
+    dl                   : grid spacing dx, (dx,dy) or (dx,dy,dz) in 1D, 2D or 3D
+    domain_size          : size of the physical domain Lx, (Lx,Ly), (Lx,Ly,Lz) in 1D, 2D or 3D
+    cells                : number of cells nx or (nx, ny) or (nx, ny, nz) in 1, 2 and 3D.
+    final_time           : final simulation time. Must be set if 'time_step' is not
+    time_step            : simulation time step. Must be specified if 'final_time' is not
+    interp_order         : order of the particle/mesh interpolation. Either 1, 2, 3 or 4 (default=1)
+    layout               : layout of the physical quantities on the mesh (default = "yee")
+    origin               : origin of the physical domain, (default (0,0,0) in 3D)
+    refined_particle_nbr : number of refined particles for particle splitting ( TODO default hard-coded to 2)
+    particle_pusher      : algo to push particles (default = "modifiedBoris")
+    path                 : path for outputs (default : './')
+    boundary_types       : type of boundary conditions (default is "periodic" for each direction)
+    diag_export_format   : format of the output diagnostics (default= "ascii")
+    refinement           : {"levels":[], "extent_ratio":[], "refinement_iterations":[]}
+
+    """
 
     @checker
     def __init__(self, **kwargs):
-        """
-        1D run example: Simulation(time_step_nbr = 100, boundary_types="periodic", cells=80)
-        2D run example: Simulation(time_step_nbr = 100, boundary_types=("periodic","periodic"), cells=(80,20))
-        3D run example: Simulation(time_step_nbr = 100, boundary_types=("periodic","periodic","periodic"), cells=(80,20,40))
 
-        optional parameters:
-        -------------------
-
-        dl                   : grid spacing dx, (dx,dy) or (dx,dy,dz) in 1D, 2D or 3D
-        domain_size          : size of the physical domain Lx, (Lx,Ly), (Lx,Ly,Lz) in 1D, 2D or 3D
-        cells                : number of cells nx or (nx, ny) or (nx, ny, nz) in 1, 2 and 3D.
-        final_time           : final simulation time. Must be set if 'time_step' is not
-        time_step            : simulation time step. Must be specified if 'final_time' is not
-        interp_order         : order of the particle/mesh interpolation. Either 1, 2, 3 or 4 (default=1)
-        layout               : layout of the physical quantities on the mesh (default = "yee")
-        origin               : origin of the physical domain, (default (0,0,0) in 3D)
-        refined_particle_nbr : number of refined particles for particle splitting ( TODO default hard-coded to 2)
-        particle_pusher      : algo to push particles (default = "modifiedBoris")
-        path                 : path for outputs (default : './')
-        boundary_types       : type of boundary conditions (default is "periodic" for each direction)
-        diag_export_format   : format of the output diagnostics (default= "ascii")
-
-        """
+        if "Simulation" in objects:
+            raise RuntimeError("a simulation is already created")
+        else:
+            objects["Simulation"] = self
 
         self.cells = kwargs['cells']
         self.dims = compute_dimension(self.cells)
@@ -281,9 +314,16 @@ class Simulation(object):
         self.refined_particle_nbr = kwargs['refined_particle_nbr']
         self.diag_export_format = kwargs['diag_export_format']
 
+        refinement = kwargs["refinement"]
+
         self.levels_to_refine = []
         self.extent_ratio = []
         self.refinement_iterations = []
+
+        if refinement is not None:
+            self.levels_to_refine = refinement["levels"]
+            self.extent_ratio = refinement["extent_ratio"]
+            self.refinement_iterations  = refinement["refinement_iterations"]
 
         self.diagnostics = []
         self.model = None
@@ -305,19 +345,7 @@ class Simulation(object):
         else:
             raise NotImplementedError("Error: 2D and 3D not implemented yet")
 
-    def refine(self, levels, extent_ratio, refinement_iterations):
-        if len(levels) != len(refinement_iterations):
-            raise ValueError("Error: levels and refinement_iterations must have the same length")
-        if extent_ratio[0] >= extent_ratio[1]:
-            raise ValueError("Error: extent_ratio[0] must be < extent_ratio[1]")
-        if extent_ratio[0] < 0:
-            raise ValueError("Error: extent_ratio[0] must be > 0")
-        if extent_ratio[1] > 1:
-            raise ValueError("Error: extent_ratio[1] must be < 1")
 
-        self.levels_to_refine = levels
-        self.extent_ratio = extent_ratio
-        self.refinement_iterations = refinement_iterations
 
 
 # ------------------------------------------------------------------------------
@@ -387,29 +415,4 @@ class Simulation(object):
         self.model = model
 
 # ------------------------------------------------------------------------------
-
-
-def prepare_job(sim):
-    """
-    prepare a simulation for a run:
-        - creates the simulation directory [simulation.path] if it does not exist yet
-        - writes an INI file in the directory [simulation.path]
-        - for each diagnostic registered in the simulation:
-            - creates the diagnostic directory 'diag['path']' under [simulation.path]/
-              if it does not exist yet
-    """
-
-    print("preparing job...")
-    if not os.path.exists(sim.path):
-        print("mkdir "+sim.path)
-        os.makedirs(sim.path)
-    print("writing ini file in " + sim.path + os.path.sep)
-    sim.write_ini_file()
-
-    for diag in sim.diagnostics:
-        path = diag.path
-        full_path = os.path.join(sim.path, path)
-        if not os.path.exists(full_path):
-            print("mkdir " + full_path)
-            os.makedirs(full_path)
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import sys
-import miniphare.inputs.uniform_model as uniform_model
-import miniphare.inputs.simulation as simulation
-import miniphare.inputs.diagnostics as diagnostics
-import miniphare.inputs.phare as phare
+from . import uniform_model
+from . import simulation
+from . import diagnostics
+
 
 def main():
     simu = simulation.Simulation(time_step_nbr=1000, boundary_types="periodic", cells=80, dl=0.1, final_time=1.,
