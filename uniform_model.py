@@ -71,7 +71,9 @@ class UniformModel(object):
                        "charge"+idx: charge,
                        "mass"+idx: mass,
                        "density"+idx: density,
-                       "vbulk"+idx: vbulk,
+                       "vx"+idx: vbulk[0],
+                       "vy" + idx: vbulk[1],
+                       "vz" + idx: vbulk[2],
                        "beta"+idx: beta,
                        "anisotropy"+idx: anisotropy,
                        "nbrParticlesPerCell"+idx: nbr_part_per_cell}
