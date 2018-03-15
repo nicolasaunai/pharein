@@ -4,7 +4,7 @@ import numpy as np
 import configparser
 import os
 
-import miniphare.inputs.phare_utilities as phare_utilities
+import pharein.phare_utilities as phare_utilities
 
 
 def compute_dimension(cells):
@@ -373,7 +373,7 @@ class Simulation(object):
                    "levels_to_refine": ", ".join([str(l) for l in self.levels_to_refine]),
                    "patch_to_refine": ", ".join([str(p) for p in [0]*len(self.levels_to_refine)])}
 
-        add_dict_to_config(amr, config)
+            add_dict_to_config(amr, config)
 
         for diag in self.diagnostics:
             add_dict_to_config(diag.to_dict(), config, section_key="name")
@@ -406,8 +406,8 @@ def prepare_job(sim):
     if not os.path.exists(sim.path):
         print("mkdir "+sim.path)
         os.makedirs(sim.path)
-        print("writing ini file in " + sim.path + os.path.sep)
-        sim.write_ini_file()
+    print("writing ini file in " + sim.path + os.path.sep)
+    sim.write_ini_file()
 
     for diag in sim.diagnostics:
         path = diag.path
