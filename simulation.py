@@ -281,9 +281,6 @@ class Simulation(object):
         self.refined_particle_nbr = kwargs['refined_particle_nbr']
         self.diag_export_format = kwargs['diag_export_format']
 
-        # TODO: nbr_ion_populations must be a function that counts the species in a model
-        # self.nbr_ion_populations = nbr_ion_populations
-
         self.levels_to_refine = []
         self.extent_ratio = []
         self.refinement_iterations = []

@@ -85,6 +85,6 @@ class UniformModel(object):
         self.model.update(new_species)
 #------------------------------------------------------------------------------
 
-
     def to_dict(self):
+        self.model['nbr_ion_populations'] = self.nbr_species()
         return self.model
