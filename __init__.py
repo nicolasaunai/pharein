@@ -1,6 +1,6 @@
 
 from .uniform_model import UniformModel
-from .diagnostics import FluidDiagnostics, ElectromagDiagnostics
+from .diagnostics import FluidDiagnostics, ElectromagDiagnostics, ParticleDiagnostics
 from .simulation import Simulation
 from . import globals
 

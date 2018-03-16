@@ -188,6 +188,14 @@ class ParticleDiagnostics(Diagnostics):
             else:
                 self.diag_type = kwargs['diag_type']
 
+        self.space_box(**kwargs)
+
+        if 'species_name' not in kwargs:
+            raise ValueError("Error: missing species_name")
+        else:
+            self.species_name = kwargs['species_name']
+
+
     def space_box(self, **kwargs):
 
         if 'extent' not in kwargs:
@@ -204,4 +212,5 @@ class ParticleDiagnostics(Diagnostics):
                 "start_iteration": self.start_iteration,
                 "last_iteration": self.last_iteration,
                 "path": self.path,
-                "extent": self.extent}
+                "extent": ", ".join([str(x) for x in self.extent]),
+                "species_name":self.species_name}
