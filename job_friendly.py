@@ -9,7 +9,7 @@ ph.Simulation(
     cells=80,
     dl=0.1,
     final_time=1.,
-    path='simu1'
+    path='test5'
     #, refinement = {"level":[0,1], "extent_ratio":[0.4, 0.6], "refinement_iterations":[0, 3]}
 )
 
@@ -59,6 +59,16 @@ ph.ElectromagDiagnostics(
 )
 
 
+ph.ParticleDiagnostics(
+        name = "ParticleDiagnostics1",
+        compute_every=10,
+        write_every=10,
+        start_iteration=0,
+        last_iteration=90,
+        diag_type="space_box",
+        extent=(2., 4.),
+        species_name="proton1"
+        )
 
 
 ph.prepare_job()
