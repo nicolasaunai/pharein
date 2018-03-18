@@ -104,42 +104,6 @@ class Diagnostics:
 # ------------------------------------------------------------------------------
 
 
-class FluidDiagnostics (Diagnostics):
-
-    fluid_diag_types = ['rho_s', 'flux_s']
-    category = "FluidDiagnostics"
-
-    def __init__(self, **kwargs):
-        super(FluidDiagnostics, self).__init__(**kwargs)
-
-        if 'species_name' not in kwargs:
-            raise ValueError("Error: missing species_name")
-        else:
-            self.species_name = kwargs['species_name']
-
-        if 'diag_type' not in kwargs:
-            raise ValueError("Error: missing diag_type parameter")
-        else:
-            if kwargs['diag_type'] not in FluidDiagnostics.fluid_diag_types:
-                error_msg = "Error: '{}' not a valid fluid diagnostics : " + ', '.join(FluidDiagnostics.fluid_diag_types)
-                raise ValueError(error_msg.format(kwargs['diag_type']))
-            else:
-                self.diag_type = kwargs['diag_type']
-
-    def to_dict(self):
-        return {"name": self.name,
-                "diag_category": FluidDiagnostics.category,
-                "diag_type": self.diag_type,
-                "write_every": self.write_every,
-                "compute_every": self.compute_every,
-                "start_iteration": self.start_iteration,
-                "last_iteration": self.last_iteration,
-                "path": self.path,
-                "species_name": self.species_name}
-
-# ------------------------------------------------------------------------------
-
-
 class ElectromagDiagnostics(Diagnostics):
 
     em_diag_types = ['E', 'B']
@@ -166,6 +130,51 @@ class ElectromagDiagnostics(Diagnostics):
                 "start_iteration": self.start_iteration,
                 "last_iteration": self.last_iteration,
                 "path": self.path}
+
+# ------------------------------------------------------------------------------
+
+def species_in_model(species):
+    return species  in globals.sim.model.species
+
+
+
+
+class FluidDiagnostics (Diagnostics):
+
+    fluid_diag_types = ['rho_s', 'flux_s']
+    category = "FluidDiagnostics"
+
+    def __init__(self, **kwargs):
+        super(FluidDiagnostics, self).__init__(**kwargs)
+
+        if 'species_name' not in kwargs:
+            raise ValueError("Error: missing species_name")
+        else:
+            self.species_name = kwargs['species_name']
+
+        if 'diag_type' not in kwargs:
+            raise ValueError("Error: missing diag_type parameter")
+        else:
+            if kwargs['diag_type'] not in FluidDiagnostics.fluid_diag_types:
+                error_msg = "Error: '{}' not a valid fluid diagnostics : " + ', '.join(FluidDiagnostics.fluid_diag_types)
+                raise ValueError(error_msg.format(kwargs['diag_type']))
+            else:
+                self.diag_type = kwargs['diag_type']
+
+        if not species_in_model(self.species_name):
+            raise ValueError("Error: species '{}' not in simulation initial model".format(self.species_name))
+
+    def to_dict(self):
+        return {"name": self.name,
+                "diag_category": FluidDiagnostics.category,
+                "diag_type": self.diag_type,
+                "write_every": self.write_every,
+                "compute_every": self.compute_every,
+                "start_iteration": self.start_iteration,
+                "last_iteration": self.last_iteration,
+                "path": self.path,
+                "species_name": self.species_name}
+
 
 
 # ------------------------------------------------------------------------------
@@ -194,7 +203,9 @@ class ParticleDiagnostics(Diagnostics):
             raise ValueError("Error: missing species_name")
         else:
             self.species_name = kwargs['species_name']
-
+            
+        if not species_in_model(self.species_name):
+            raise ValueError("Error: species '{}' not in simulation initial model".format(self.species_name))
 
     def space_box(self, **kwargs):
 
