@@ -178,7 +178,7 @@ def check_boundaries(dims, **kwargs):
 
 
 def check_origin(dims, **kwargs):
-    origin = kwargs.get("origin", [0] * dims)
+    origin = kwargs.get("origin", [0.] * dims)
     return origin
 
 # ------------------------------------------------------------------------------
