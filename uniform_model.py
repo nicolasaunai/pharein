@@ -92,7 +92,7 @@ class UniformModel(object):
                           "vz": lambda x : vbulk[2],
                           "beta": lambda x : beta,
                           "anisotropy": lambda x : anisotropy,
-                          "nbrParticlesPerCell": lambda x : nbr_part_per_cell}}
+                          "nbrParticlesPerCell": nbr_part_per_cell}}
 
         keys = self.model.keys()
         if name in keys:
