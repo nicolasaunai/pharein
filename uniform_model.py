@@ -45,12 +45,7 @@ class UniformModel(object):
         """
         returns the number of species currently registered in the model
         """
-        keys = self.model.keys()
-        nbr = 0
-        for k in keys:
-            if k.startswith('population'):
-                nbr += 1
-        return nbr
+        return len(self.populations)
 
 #------------------------------------------------------------------------------
 
