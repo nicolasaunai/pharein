@@ -50,8 +50,8 @@ class UniformModel(object):
 #------------------------------------------------------------------------------
 
     def add_population(self, name,
-                        charge=1,
-                        mass=1,
+                        charge=1.,
+                        mass=1.,
                         nbr_part_per_cell=100,
                         density=1.,
                         vbulk=(0., 0., 0.),
