@@ -1,4 +1,4 @@
-*.pynb_checkpoints
+*pynb_checkpoints*
 *.png
 *.idea*
 *.pyc

@@ -200,27 +200,11 @@ def add_dict_to_config(the_dict,conf, section_key="section"):
 # ------------------------------------------------------------------------------
 
 
-def check_refine(**kwargs):# levels, extent_ratio, refinement_iterations):
+def check_refinement_boxes(**kwargs):
+    refinement_boxes = kwargs.get("refinement_boxes", None)
+    print("Need to test boxes are OK (no overlap, in level range, etc.)")
+    return refinement_boxes
 
-    if "refinement" in kwargs:
-        refinement = kwargs["refinement"]
-    else:
-        return None
-
-    levels = refinement['levels']
-    refinement_iterations = refinement["refinement_iterations"]
-    extent_ratio = refinement["extent_ratio"]
-
-    if len(levels) != len(refinement_iterations):
-        raise ValueError("Error: levels and refinement_iterations must have the same length")
-    if extent_ratio[0] >= extent_ratio[1]:
-        raise ValueError("Error: extent_ratio[0] must be < extent_ratio[1]")
-    if extent_ratio[0] < 0:
-        raise ValueError("Error: extent_ratio[0] must be > 0")
-    if extent_ratio[1] > 1:
-        raise ValueError("Error: extent_ratio[1] must be < 1")
-
-    return refinement
 
 
 # ------------------------------------------------------------------------------
@@ -231,7 +215,7 @@ def checker(func):
         accepted_keywords = ['domain_size', 'cells', 'dl', 'particle_pusher', 'final_time',
                              'time_step', 'time_step_nbr', 'layout', 'interp_order', 'origin',
                              'boundary_types', 'refined_particle_nbr', 'path',
-                             'diag_export_format']
+                             'diag_export_format', 'max_nbr_levels', 'refinement_boxes']
 
         wrong_kwds = phare_utilities.not_in_keywords_list(accepted_keywords, **kwargs)
         if len(wrong_kwds) > 0:
@@ -246,16 +230,18 @@ def checker(func):
             dims = compute_dimension(cells)
             boundary_types = check_boundaries(dims, **kwargs)
             origin = check_origin(dims, **kwargs)
-            refinement = check_refine(**kwargs)
+            refinement_boxes = check_refinement_boxes(**kwargs)
 
             refined_particle_nbr = kwargs.get('refined_particle_nbr', 2)  # TODO change that default value
             diag_export_format = kwargs.get('diag_export_format', 'ascii') #TODO add checker with valid formats
+            max_nbr_levels = kwargs.get('max_nbr_levels', 1)
+
 
             return func(simulation_object, cells=cells, dl=dl, interp_order=interp_order,
                         time_step=time_step, time_step_nbr=time_step_nbr,
                         particle_pusher=pusher, layout=layout, origin=origin,
                         boundary_types=boundary_types, path=path, refined_particle_nbr=refined_particle_nbr,
-                        diag_export_format=diag_export_format, refinement=refinement)
+                        diag_export_format=diag_export_format, max_nbr_levels=max_nbr_levels, refinement_boxes=refinement_boxes)
 
         except ValueError as msg:
             print(msg)
@@ -288,7 +274,8 @@ class Simulation(object):
     path                 : path for outputs (default : './')
     boundary_types       : type of boundary conditions (default is "periodic" for each direction)
     diag_export_format   : format of the output diagnostics (default= "ascii")
-    refinement           : {"levels":[], "extent_ratio":[], "refinement_iterations":[]}
+    max_nbr_levels       : [default=1] max number of levels in the hierarchy
+    refinement_boxes     : [default=None] {"L0":{"B0":[(lox,loy,loz),(upx,upy,upz)],...,"Bi":[(),()]},..."Li":{B0:[(),()]}}
 
     """
 
@@ -313,17 +300,8 @@ class Simulation(object):
         self.boundary_types = kwargs['boundary_types']
         self.refined_particle_nbr = kwargs['refined_particle_nbr']
         self.diag_export_format = kwargs['diag_export_format']
-
-        refinement = kwargs["refinement"]
-
-        self.levels_to_refine = []
-        self.extent_ratio = []
-        self.refinement_iterations = []
-
-        if refinement is not None:
-            self.levels_to_refine = refinement["levels"]
-            self.extent_ratio = refinement["extent_ratio"]
-            self.refinement_iterations  = refinement["refinement_iterations"]
+        self.max_nbr_levels = kwargs['max_nbr_levels']
+        self.refinement_boxes = kwargs['refinement_boxes']
 
         self.diagnostics = []
         self.model = None
@@ -367,52 +345,8 @@ class Simulation(object):
 
 # ------------------------------------------------------------------------------
 
-    def write_ini_file(self, filename="phare.ini"):
-
-        config = configparser.ConfigParser()
-        config.add_section('Simulation')
-
-        dim_names = ('x', 'y', 'z')
-        for d in np.arange(self.dims):
-            config.set('Simulation', 'nbr_cells_'+dim_names[d], str(self.cells[d]))
-            config.set('Simulation', 'd'+dim_names[d],str(self.dl[d]))
-            config.set('Simulation', 'origin_'+dim_names[d], str(self.origin[d]))
-            config.set('Simulation', 'boundary_condition_'+dim_names[d], self.boundary_types[d])
-
-        params = {"section": "Simulation",
-                  "layout": str(self.layout),
-                  "interp_order": str(self.interp_order),
-                  "time_step": str(self.time_step),
-                  "particle_pusher": self.particle_pusher,
-                  "refined_particle_nbr": self.refined_particle_nbr,
-                  "time_step_nbr": str(self.time_step_nbr),
-                  "diag_export_format": self.diag_export_format}
-
-        add_dict_to_config(params, config)
-
-        if len(self.extent_ratio) != 0:
-            amr = {"section": "amr",
-                   "min_ratio": self.extent_ratio[0],
-                   "ratio_ratio": self.extent_ratio[1],
-                   "refine_at_iteration": ", ".join([str(i) for i in self.refinement_iterations]),
-                   "levels_to_refine": ", ".join([str(l) for l in self.levels_to_refine]),
-                   "patch_to_refine": ", ".join([str(p) for p in [0]*len(self.levels_to_refine)])}
-
-            add_dict_to_config(amr, config)
-
-        for diag in self.diagnostics:
-            add_dict_to_config(diag.to_dict(), config, section_key="name")
-
-        add_dict_to_config(self.model.to_dict(), config, section_key="model")
-
-        with open(os.path.join(self.path, filename), "w") as config_file:
-            config.write(config_file)
-
-
-# ------------------------------------------------------------------------------
 
     def set_model(self, model):
         self.model = model
 
 # ------------------------------------------------------------------------------
-
