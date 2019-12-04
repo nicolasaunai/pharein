@@ -1,5 +1,6 @@
 
 from .uniform_model import UniformModel
+from .init_model import InitialModel
 from .diagnostics import FluidDiagnostics, ElectromagDiagnostics, ParticleDiagnostics
 from .simulation import Simulation
 from . import globals
@@ -35,4 +36,3 @@ def prepare_job():
         if not os.path.exists(full_path):
             print("mkdir " + full_path)
             os.makedirs(full_path)
-

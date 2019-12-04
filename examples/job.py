@@ -29,9 +29,9 @@ ph.Simulation(
 
 
 # configure the model for the initial condition
-ph.UniformModel(proton1={},
-                proton2={"density":2,
-                         "vbulk":(1., 0., 0.)}
+#ph.UniformModel(proton1={},
+#                proton2={"density":2,
+#                         "vbulk":(1., 0., 0.)}
 
                 # demo_species = {density: 2,           # default = 1
                 #                 vbulk: (10,0,0),      # default = (0., 0., 0.)
@@ -41,6 +41,25 @@ ph.UniformModel(proton1={},
                 #                 anisotropy=1          # default = 1 (Tperp/Tpara)
                 #                 }
 )
+
+
+
+
+import numpy as np
+
+def n(x):
+    x0 = 5.
+    return 1./np.cosh(x-x0)**2
+
+def bx(x):
+    x0=5.
+    return np.tanh(x-x0)
+
+
+ph.InitialModel(bx=bx,
+                protons={"density":n},
+                background={})
+
 
 
 #ph.FluidDiagnostics(
@@ -102,5 +121,3 @@ ph.UniformModel(proton1={},
 #ph.prepare_job()
 
 #phare.MiniPHARE().run(simu)
-
-
