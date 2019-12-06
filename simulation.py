@@ -206,6 +206,35 @@ def check_refinement_boxes(**kwargs):
     return refinement_boxes
 
 
+# ------------------------------------------------------------------------------
+def check_patch_size(**kwargs):
+
+    largest_patch_size = kwargs.get("largest_patch_size", None)
+    smallest_patch_size = kwargs.get("largest_patch_size", None)
+
+    dl,cells = check_domain(**kwargs)
+
+    if largest_patch_size is not None:
+
+        if not all(size >= largest_patch_size for size in cells):
+            raise ValueError("Error - largest_patch_size should be less than nbr of cells in all directions")
+
+        if largest_patch_size <= 0:
+            raise ValueError("Error - largest_patch_size cannot be <= 0")
+
+    if smallest_patch_size is not None:
+
+        if not all(size >= smallest_patch_size for size in cells):
+            raise ValueError("Error - smallest_patch_size should be less than nbr of cells in all directions")
+
+        if smallest_patch_size <= 0:
+            raise ValueError("Error - smallest_patch_size cannot be <= 0")
+
+
+
+    return largest_patch_size, smallest_patch_size
+
+
 
 # ------------------------------------------------------------------------------
 
@@ -246,6 +275,11 @@ def checker(func):
             kwargs["refined_particle_nbr"] = kwargs.get('refined_particle_nbr', 2)  # TODO change that default value
             kwargs["diag_export_format"] = kwargs.get('diag_export_format', 'ascii') #TODO add checker with valid formats
             kwargs["max_nbr_levels"] = kwargs.get('max_nbr_levels', 1)
+
+            largest, smallest = check_patch_size(**kwargs)
+            kwargs["smallest_patch_size"] = smallest
+            kwargs["largest_patch_size"] = largest
+
 
             return func(simulation_object, **kwargs)
 
